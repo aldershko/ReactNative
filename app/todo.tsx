@@ -14,9 +14,11 @@ import { ThemeContext } from "@/context/ThemeContext";
 import { Octicons } from "@expo/vector-icons";
 import Animated, { LinearTransition } from "react-native-reanimated";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 
-type Todo = {
-  id: number;
+export type Todo = {
+  id: number | string | any;
   title: string;
   completed: boolean;
 };
@@ -27,6 +29,8 @@ export default function TodoList() {
   const { theme, colorScheme, setColorScheme } = useContext(ThemeContext);
 
   const [loaded, error] = useFonts({ Inter_500Medium }); // this is how custom fonts are loaded.
+
+  const router = useRouter();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -83,15 +87,23 @@ export default function TodoList() {
     setTodos((prevTodos) => prevTodos.filter((todo) => todo.id !== id));
   };
 
+  const handlePress = (id: string) => {
+    router.push({ pathname: "/todos/[id]", params: { id } });
+  };
+
   const renderItem = ({ item }: { item: Todo }) => {
     return (
       <View style={styles.todoItem}>
-        <Text
-          onPress={() => toggleTodo(item.id)}
-          style={[styles.todoText, item.completed && styles.completedText]}
+        <Pressable
+          onLongPress={() => toggleTodo(item.id)}
+          onPress={() => handlePress(item.id.toString())}
         >
-          {item.title}
-        </Text>
+          <Text
+            style={[styles.todoText, item.completed && styles.completedText]}
+          >
+            {item.title}
+          </Text>
+        </Pressable>
 
         <Pressable onPress={() => deleteTodo(item.id)}>
           <MaterialCommunityIcons
@@ -136,6 +148,11 @@ export default function TodoList() {
             style={styles.icon}
           />
         </Pressable>
+        <StatusBar
+          style={colorScheme === "dark" ? "light" : "dark"}
+          backgroundColor={colorScheme === "dark" ? "#000" : "#FFF"}
+          translucent={false}
+        />
       </View>
 
       {/* Todo List */}
